@@ -1,0 +1,71 @@
+<%#
+name: Host - Patch Tracking & SLA Report v2
+snippet: false
+template_inputs:
+- name: Hosts filter
+  required: false
+  input_type: user
+  description: Limit the report only on hosts found by this search query. Keep empty for all hosts.
+  advanced: false
+  value_type: search
+  resource_type: Host
+- name: Errata filter
+  required: false
+  input_type: user
+  description: Limit the report only on errata found by this search query. Keep empty for all errata.
+  advanced: false
+- name: Installability
+  required: true
+  input_type: user
+  description: Select Applicable to show all applicable errata. Select Installable to show errata that are in the host's content view environment(s) and can thus be installed.
+  advanced: false
+  value_type: plain
+  options: "applicable\r\ninstallable"
+  default: "applicable"
+- name: Report Date
+  required: true
+  input_type: user
+  description: Todays date YYYY-MM-DD
+  value_type: plain
+model: ReportTemplate
+require:
+- plugin: katello
+  version: 4.9.0
+-%>
+<%- sla_thresholds = { 'Critical' => 30, 'Important' => 60, 'Moderate' => 60, 'Low' => 90 } -%>
+<%- today_str = input("Report Date") -%>
+<%- tp = today_str.to_s.split("-") -%>
+<%- today_epoch = (tp[0].to_i - 1970) * 31557600 + (tp[1].to_i - 1) * 2629800 + tp[2].to_i * 86400 -%>
+<%- severity_cvss = { 'Critical' => '9.0-10.0', 'Important' => '7.0-8.9', 'Moderate' => '4.0-6.9', 'Low' => '0.1-3.9' } -%>
+<%- report_headers 'Host', 'Operating System', 'Environment', 'Erratum', 'Type', 'Severity', 'CVSS Range', 'Released', 'Available Since', 'Status', 'Days Since Release', 'Days Unpatched', 'SLA Threshold', 'SLA Breach', 'CVEs', 'Packages' -%>
+<%- errata_filter = input('Errata filter') -%>
+<%- load_hosts(search: input('Hosts filter'), preload: [:operatingsystem]).each_record do |host| -%>
+<%-   (input('Installability') == 'applicable' ? host_applicable_errata_filtered(host, errata_filter) : host_installable_errata_filtered(host, errata_filter)).each do |erratum| -%>
+<%-     released = erratum.issued -%>
+<%-     available_since = erratum.created_at -%>
+<%-     days_since = (available_since.to_i - released.strftime('%s').to_i) / 86400 -%>
+<%-     days_unpatched = (today_epoch - released.strftime("%s").to_i) / 86400 -%>
+<%-     sla_limit = sla_thresholds[erratum.severity] || 60 -%>
+<%-     sla_breach = days_unpatched > sla_limit ? 'YES' : 'NO' -%>
+<%-     cvss_range = severity_cvss[erratum.severity] || 'N/A' -%>
+<%-     report_row(
+          'Host': host.name,
+          'Operating System': host.operatingsystem,
+          'Environment': host.single_lifecycle_environment,
+          'Erratum': erratum.errata_id,
+          'Type': erratum.errata_type,
+          'Severity': erratum.severity,
+          'CVSS Range': cvss_range,
+          'Released': released,
+          'Available Since': available_since,
+          'Status': 'Not Applied',
+          'Days Since Release': days_since,
+          'Days Unpatched': days_unpatched,
+          'SLA Threshold': "#{sla_limit} days",
+          'SLA Breach': sla_breach,
+          'CVEs': erratum.cves.map { |c| c.cve_id },
+          'Packages': erratum.package_names,
+        ) -%>
+<%-   end -%>
+<%- end -%>
+<%= report_render -%>

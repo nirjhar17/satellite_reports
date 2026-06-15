@@ -1,0 +1,64 @@
+<%#
+name: Host - Severity Lookup Report
+snippet: false
+template_inputs:
+- name: Hosts filter
+  required: false
+  input_type: user
+  description: Limit the report only on hosts found by this search query. Keep empty for all hosts.
+  advanced: false
+  value_type: search
+  resource_type: Host
+- name: Severity filter
+  required: true
+  input_type: user
+  description: Filter by severity level
+  advanced: false
+  value_type: plain
+  options: "Critical\r\nImportant\r\nModerate\r\nLow"
+  default: "Critical"
+- name: Errata filter
+  required: false
+  input_type: user
+  description: Limit the report only on errata found by this search query. Keep empty for all errata.
+  advanced: false
+- name: Installability
+  required: true
+  input_type: user
+  description: Select Applicable or Installable errata
+  advanced: false
+  value_type: plain
+  options: "applicable\r\ninstallable"
+  default: "applicable"
+model: ReportTemplate
+require:
+- plugin: katello
+  version: 4.9.0
+-%>
+<%- severity_cvss = { 'Critical' => '9.0-10.0', 'Important' => '7.0-8.9', 'Moderate' => '4.0-6.9', 'Low' => '0.1-3.9' } -%>
+<%- severity_input = input('Severity filter').to_s.strip -%>
+<%- report_headers 'Host', 'IP Address', 'Operating System', 'Environment', 'Erratum', 'Type', 'Severity', 'CVSS Range', 'Patch Release Date', 'Available Since', 'Packages', 'CVEs', 'Reboot suggested' -%>
+<%- errata_filter = input('Errata filter') -%>
+<%- load_hosts(search: input('Hosts filter'), preload: [:operatingsystem]).each_record do |host| -%>
+<%-   (input('Installability') == 'applicable' ? host_applicable_errata_filtered(host, errata_filter) : host_installable_errata_filtered(host, errata_filter)).each do |erratum| -%>
+<%-     next if erratum.severity != severity_input -%>
+<%-     cve_list = erratum.cves.map { |c| c.cve_id } -%>
+<%-     cvss_range = severity_cvss[erratum.severity] || 'N/A' -%>
+<%-     report_row(
+          'Host': host.name,
+          'IP Address': host.ip,
+          'Operating System': host.operatingsystem,
+          'Environment': host.single_lifecycle_environment,
+          'Erratum': erratum.errata_id,
+          'Type': erratum.errata_type,
+          'Severity': erratum.severity,
+          'CVSS Range': cvss_range,
+          'Patch Release Date': erratum.issued,
+          'Available Since': erratum.created_at,
+          'Packages': erratum.package_names,
+          'CVEs': cve_list,
+          'Reboot suggested': erratum.reboot_suggested,
+        ) -%>
+<%-   end -%>
+<%- end -%>
+<%= report_render -%>
