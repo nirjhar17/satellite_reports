@@ -8,6 +8,8 @@ Custom ERB report templates for Red Hat Satellite 6.18+ to address regulatory co
 
 Consolidated compliance view for regulatory audits — shows all outstanding security vulnerabilities with severity, CVSS scores, and CVE details per host.
 
+**What's special:** Adds CVSS Range, CVE Links (clickable URLs to Red Hat CVE pages), and Reboot Suggested — columns not available in any built-in Satellite report.
+
 **Columns:** Host, Operating System, Environment, Erratum, Type, Severity, CVSS Range, Patch Release Date, Available Since, Packages, CVEs, CVE Links, Reboot Suggested
 
 ---
@@ -15,6 +17,8 @@ Consolidated compliance view for regulatory audits — shows all outstanding sec
 ### 2. Host - Patch Tracking & SLA Report v2 (`host-patch-tracking-sla-report-v2.erb`)
 
 Calculates "Days Unpatched" per host/errata and flags SLA breaches based on severity thresholds (Critical: 30 days, Important: 60 days, Moderate/Low: 90 days).
+
+**What's special:** Auto-calculates Days Unpatched and gives a YES/NO SLA Breach flag per errata — ready to hand to the regulator without manual Excel work.
 
 **Columns:** Host, Operating System, Environment, Erratum, Type, Severity, CVSS Range, Released, Available Since, Status, Days Unpatched, SLA Threshold, SLA Breach (YES/NO), CVEs, Packages
 
@@ -24,6 +28,8 @@ Calculates "Days Unpatched" per host/errata and flags SLA breaches based on seve
 
 Filter hosts by a specific severity level (Critical/Important/Moderate/Low) and get their IP addresses — for network team prioritization and firewall rules.
 
+**What's special:** Includes IP Address per host and a severity dropdown filter — lets you instantly answer "which servers have Critical vulnerabilities and what are their IPs?"
+
 **Columns:** Host, IP Address, Operating System, Environment, Erratum, Type, Severity, CVSS Range, Patch Release Date, Available Since, Packages, CVEs, Reboot Suggested
 
 ---
@@ -31,6 +37,8 @@ Filter hosts by a specific severity level (Critical/Important/Moderate/Low) and 
 ### 4. Host - CVE Impact Lookup Report (`host-cve-impact-lookup-report.erb`)
 
 Enter a specific CVE ID (e.g., CVE-2024-1234) and get all affected hosts with their IP addresses — for incident response when a critical vulnerability is published.
+
+**What's special:** Reverse lookup by CVE ID — when a zero-day drops, instantly find every affected server and its IP without manually searching host by host.
 
 **Columns:** Host, IP Address, Operating System, Lifecycle Environment, Erratum ID, Erratum Type, Severity, Packages, CVEs, Reboot Suggested
 
