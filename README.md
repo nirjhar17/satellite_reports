@@ -69,6 +69,47 @@ curl -sk -u admin:password -X POST \
 
 **Note:** Always use the `/import` endpoint (not `/create`) — it auto-creates template inputs from the ERB header.
 
+## Quick Start - Upload via Hammer CLI
+
+Download all report templates:
+
+```bash
+curl -O https://raw.githubusercontent.com/nirjhar17/satellite_reports/main/host-cve-exposure-report-with-cvss-scores-and-reboot-status.erb
+curl -O https://raw.githubusercontent.com/nirjhar17/satellite_reports/main/host-patch-sla-breach-report-with-days-unpatched.erb
+curl -O https://raw.githubusercontent.com/nirjhar17/satellite_reports/main/host-severity-impact-report-with-ip-addresses-and-reboot-status.erb
+curl -O https://raw.githubusercontent.com/nirjhar17/satellite_reports/main/host-cve-lookup-report-with-affected-ips-and-reboot-status.erb
+```
+
+Upload to Satellite (run on Satellite server):
+
+```bash
+hammer report-template create \
+  --name "Host - CVE Exposure Report with CVSS Scores & Reboot Status" \
+  --file host-cve-exposure-report-with-cvss-scores-and-reboot-status.erb \
+  --organizations "Default Organization" \
+  --locations "Default Location"
+
+hammer report-template create \
+  --name "Host - Patch SLA Breach Report with Days Unpatched" \
+  --file host-patch-sla-breach-report-with-days-unpatched.erb \
+  --organizations "Default Organization" \
+  --locations "Default Location"
+
+hammer report-template create \
+  --name "Host - Severity Impact Report with IP Addresses & Reboot Status" \
+  --file host-severity-impact-report-with-ip-addresses-and-reboot-status.erb \
+  --organizations "Default Organization" \
+  --locations "Default Location"
+
+hammer report-template create \
+  --name "Host - CVE Lookup Report with Affected IPs & Reboot Status" \
+  --file host-cve-lookup-report-with-affected-ips-and-reboot-status.erb \
+  --organizations "Default Organization" \
+  --locations "Default Location"
+```
+
+> **Note:** Replace `"Default Organization"` and `"Default Location"` with your actual organization and location names. The `--file` flag ensures Hammer parses the ERB header and auto-creates all template inputs.
+
 ## How to Generate
 
 - **GUI:** Monitor → Report Templates → Select report → Generate → Fill inputs → Generate
