@@ -46,28 +46,39 @@ Enter a specific CVE ID (e.g., CVE-2024-1234) and get all affected hosts with th
 
 ## How to Install
 
-### Option A — GUI (Recommended)
+### Option A — API Import (Recommended)
 
-1. Go to **Monitor → Report Templates → Create Report Template**
-2. Paste the entire ERB file content (including the `<%# ... -%>` header)
-3. Click **Submit** — template inputs are auto-created from the header
-4. Assign to your Organization/Location via the **Edit** page
-
-### Option B — API
+Use the Import API endpoint which auto-creates all template inputs from the ERB header:
 
 ```bash
 SAT_URL="https://your-satellite.example.com"
 
-# Escape template content and import
-CONTENT=$(python3 -c "import sys,json; print(json.dumps(sys.stdin.read())[1:-1])" < host-cve-exposure-report-with-cvss-scores-and-reboot-status.erb)
+# Download the template
+curl -O https://raw.githubusercontent.com/nirjhar17/satellite_reports/main/host-patch-sla-breach-report-with-days-unpatched.erb
+
+# Escape content and import
+CONTENT=$(python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))" < host-patch-sla-breach-report-with-days-unpatched.erb)
 
 curl -sk -u admin:password -X POST \
   -H 'Content-Type: application/json' \
   "${SAT_URL}/api/v2/report_templates/import" \
-  -d "{\"report_template\": {\"name\": \"Host - Compliance Report\", \"template\": \"${CONTENT}\"}}"
+  -d "{\"report_template\": {\"name\": \"Host - Patch SLA Breach Report with Days Unpatched\", \"template\": $CONTENT}}"
 ```
 
-**Note:** Always use the `/import` endpoint (not `/create`) — it auto-creates template inputs from the ERB header.
+> **Important:** Always use the `/import` endpoint (not `/create`) — only `/import` parses the ERB header and auto-creates template inputs.
+
+### Option B — GUI (Manual Inputs Required)
+
+1. Go to **Monitor → Report Templates → Create Report Template**
+2. Paste the entire ERB file content into the editor
+3. The **Name** field auto-fills from the header
+4. Click **Submit**
+5. **Important:** GUI paste does NOT auto-create template inputs. You must manually add them:
+   - Click **Edit** on the template → go to **Inputs** tab
+   - Add each input listed in the ERB file header (name, required, input_type, options)
+6. Assign to your Organization/Location
+
+> **Warning:** If you skip step 5, you will get errors like `ERF01-2862: no input with name "Report Date" for input macro found` when generating.
 
 ## Quick Start - Upload via Hammer CLI
 
@@ -107,6 +118,8 @@ hammer report-template create \
   --organizations "Default Organization" \
   --locations "Default Location"
 ```
+
+> **Important:** If `hammer report-template create --file` does not auto-create inputs on your version, delete the template and use the API Import method (Option A above) instead.
 
 > **Note:** Replace `"Default Organization"` and `"Default Location"` with your actual organization and location names. The `--file` flag ensures Hammer parses the ERB header and auto-creates all template inputs.
 
