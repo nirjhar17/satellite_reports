@@ -94,32 +94,32 @@ curl -O https://raw.githubusercontent.com/nirjhar17/satellite_reports/main/host-
 Upload to Satellite (run on Satellite server):
 
 ```bash
-hammer report-template create \
+hammer report-template import \
   --name "Host - CVE Exposure Report with CVSS Scores & Reboot Status" \
   --file host-cve-exposure-report-with-cvss-scores-and-reboot-status.erb \
   --organizations "Default Organization" \
   --locations "Default Location"
 
-hammer report-template create \
+hammer report-template import \
   --name "Host - Patch SLA Breach Report with Days Unpatched" \
   --file host-patch-sla-breach-report-with-days-unpatched.erb \
   --organizations "Default Organization" \
   --locations "Default Location"
 
-hammer report-template create \
+hammer report-template import \
   --name "Host - Severity Impact Report with IP Addresses & Reboot Status" \
   --file host-severity-impact-report-with-ip-addresses-and-reboot-status.erb \
   --organizations "Default Organization" \
   --locations "Default Location"
 
-hammer report-template create \
+hammer report-template import \
   --name "Host - CVE Lookup Report with Affected IPs & Reboot Status" \
   --file host-cve-lookup-report-with-affected-ips-and-reboot-status.erb \
   --organizations "Default Organization" \
   --locations "Default Location"
 ```
 
-> **Important:** If `hammer report-template create --file` does not auto-create inputs on your version, delete the template and use the API Import method (Option A above) instead.
+> **Important:** Use `import` (not `create`). Only `hammer report-template import --file` parses the ERB header metadata and auto-creates all template inputs. The `create` command does NOT auto-create inputs.
 
 > **Note:** Replace `"Default Organization"` and `"Default Location"` with your actual organization and location names. The `--file` flag ensures Hammer parses the ERB header and auto-creates all template inputs.
 
