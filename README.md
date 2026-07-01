@@ -1,122 +1,73 @@
 # Satellite Custom Report Templates
 
-Custom report templates for Red Hat Satellite 6.18+ to enhance patch compliance reporting.
+Custom ERB report templates for Red Hat Satellite 6.18+ to address regulatory compliance, SLA tracking, and vulnerability management.
 
-## Templates
+## Reports
 
-- **host-compliance-report.erb** — Compliance-focused errata report with CVSS ranges and CVE links
-- **host-patch-tracking-sla-report.erb** — End-to-end patch tracking with SLA breach detection
+### 1. Host - Compliance Report (`host-compliance-report.erb`)
 
-## Host - Compliance Report
+Consolidated compliance view for regulatory audits — shows all outstanding security vulnerabilities with severity, CVSS scores, and CVE details per host.
 
-Extends the built-in "Host - Available Errata" with additional compliance-relevant columns.
+**Columns:** Host, Operating System, Environment, Erratum, Type, Severity, CVSS Range, Patch Release Date, Available Since, Packages, CVEs, CVE Links, Reboot Suggested
 
-**What It Adds:**
+---
 
-- **CVSS Range** — Maps Red Hat severity to CVSS v3 score range
-- **CVE Links** — Direct URLs to Red Hat CVE pages for exact CVSS verification
+### 2. Host - Patch Tracking & SLA Report v2 (`host-patch-tracking-sla-report-v2.erb`)
 
-**Output Columns (13 total):** Host, Operating System, Environment, Erratum, Type, Severity, CVSS Range, Patch Release Date, Available Since, Packages, CVEs, CVE Links, Reboot suggested
+Calculates "Days Unpatched" per host/errata and flags SLA breaches based on severity thresholds (Critical: 30 days, Important: 60 days, Moderate/Low: 90 days).
 
-## Host - Patch Tracking & SLA Report
+**Columns:** Host, Operating System, Environment, Erratum, Type, Severity, CVSS Range, Released, Available Since, Status, Days Unpatched, SLA Threshold, SLA Breach (YES/NO), CVEs, Packages
 
-Tracks errata from release to current state with automatic SLA breach detection. Solves two problems in a single report: end-to-end patch visibility and SLA compliance monitoring.
+---
 
-**What It Does:**
+### 3. Host - Severity Lookup Report (`host-severity-lookup-report.erb`)
 
-- Shows all applicable/installable errata per host with full timeline data
-- Calculates **Days Since Release** — how many days since Red Hat published the errata
-- Applies **SLA Thresholds** based on severity (Critical: 30 days, Important/Moderate: 60 days, Low: 90 days)
-- Flags **SLA Breach** as YES/NO when errata exceeds the threshold and remains unapplied
-- Includes **CVSS Range** mapping (same as the compliance report)
+Filter hosts by a specific severity level (Critical/Important/Moderate/Low) and get their IP addresses — for network team prioritization and firewall rules.
 
-**Output Columns (15 total):** Host, Operating System, Environment, Erratum, Type, Severity, CVSS Range, Released, Available Since, Status, Days Since Release, SLA Threshold, SLA Breach, CVEs, Packages
+**Columns:** Host, IP Address, Operating System, Environment, Erratum, Type, Severity, CVSS Range, Patch Release Date, Available Since, Packages, CVEs, Reboot Suggested
 
-**SLA Threshold Defaults:**
+---
 
-- Critical → 30 days
-- Important → 60 days
-- Moderate → 60 days
-- Low → 90 days
+### 4. Host - CVE Impact Lookup Report (`host-cve-impact-lookup-report.erb`)
 
-These thresholds are defined at the top of the template and can be adjusted to match your organization's patching policy.
+Enter a specific CVE ID (e.g., CVE-2024-1234) and get all affected hosts with their IP addresses — for incident response when a critical vulnerability is published.
 
-## CVSS Range Mapping
+**Columns:** Host, IP Address, Operating System, Lifecycle Environment, Erratum ID, Erratum Type, Severity, Packages, CVEs, Reboot Suggested
 
-Both templates use Red Hat's official severity-to-CVSS classification:
-
-- Critical → 9.0–10.0
-- Important → 7.0–8.9
-- Moderate → 4.0–6.9
-- Low → 0.1–3.9
-
-Source: [Red Hat Severity Ratings](https://access.redhat.com/security/updates/classification/)
+---
 
 ## How to Install
 
-**Option A — Clone from GUI:**
+### Option A — GUI (Recommended)
 
-- Navigate to Monitor → Reports → Report Templates
-- Click "Create Template"
-- Paste the ERB content from the desired template file
-- Go to the Inputs tab and add the required inputs (see template header for input definitions)
-- Click Submit
+1. Go to **Monitor → Report Templates → Create Report Template**
+2. Paste the entire ERB file content (including the `<%# ... -%>` header)
+3. Click **Submit** — template inputs are auto-created from the header
+4. Assign to your Organization/Location via the **Edit** page
 
-**Option B — Import via Hammer CLI:**
+### Option B — API
 
+```bash
+SAT_URL="https://your-satellite.example.com"
+
+# Escape template content and import
+CONTENT=$(python3 -c "import sys,json; print(json.dumps(sys.stdin.read())[1:-1])" < host-compliance-report.erb)
+
+curl -sk -u admin:password -X POST \
+  -H 'Content-Type: application/json' \
+  "${SAT_URL}/api/v2/report_templates/import" \
+  -d "{\"report_template\": {\"name\": \"Host - Compliance Report\", \"template\": \"${CONTENT}\"}}"
 ```
-hammer report-template create \
-  --name "Host - Compliance Report" \
-  --file host-compliance-report.erb \
-  --organizations "Your Org"
 
-hammer report-template create \
-  --name "Host - Patch Tracking & SLA Report" \
-  --file host-patch-tracking-sla-report.erb \
-  --organizations "Your Org"
-```
-
-**Note:** When importing via `hammer`, you must manually add the template inputs in the Satellite GUI (Edit Template → Inputs tab) since `hammer` does not auto-parse input definitions from the ERB header.
+**Note:** Always use the `/import` endpoint (not `/create`) — it auto-creates template inputs from the ERB header.
 
 ## How to Generate
 
-**GUI:**
-
-- Monitor → Reports → Report Templates → select template → Generate
-- Set Installability = applicable (or installable) → Generate
-
-**Hammer CLI:**
-
-```
-hammer report-template generate \
-  --name "Host - Patch Tracking & SLA Report" \
-  --inputs "Installability=applicable,Errata filter=,Hosts filter="
-```
-
-**Schedule weekly email delivery:**
-
-```
-hammer report-template schedule \
-  --name "Host - Patch Tracking & SLA Report" \
-  --inputs "Installability=applicable" \
-  --generate-at "2026-05-19 09:00:00" \
-  --mail-to "compliance@example.com" \
-  --report-format csv
-```
+- **GUI:** Monitor → Report Templates → Select report → Generate → Fill inputs → Generate
+- **API:** `POST /api/v2/report_templates/<ID>/generate` with `input_values`
 
 ## Compatibility
 
 - Red Hat Satellite 6.18+
-- Requires Katello plugin 4.9.0+
-
-## Safemode Considerations
-
-Satellite ERB templates run in Ruby safemode, which restricts access to certain classes like `Date` and `Time`. These templates work around this by:
-
-- Using `to_i` (epoch seconds) for date arithmetic instead of `Date.today` or `Time.now`
-- Calculating days elapsed as `(available_since.to_i - released.to_i) / 86400`
-- Avoiding `begin/rescue/end` blocks (not allowed in safemode)
-
-## Why CVSS Range Instead of Exact Score
-
-The exact CVSS score per CVE lives in the Red Hat Lightspeed Vulnerability service, which is a separate Insights-backed dashboard. The Katello ERB template engine cannot access Lightspeed data due to safemode restrictions. The severity-to-CVSS range mapping provides a defensible compliance bucketing, and the CVE Links column (in the compliance report) allows auditors to verify exact scores with one click.
+- Requires Katello plugin (content management enabled)
+- Hosts must be registered with applicable errata for reports to return data
