@@ -4,7 +4,7 @@ Custom ERB report templates for Red Hat Satellite 6.18+ to address regulatory co
 
 ## Reports
 
-### 1. Host - CVE Exposure Report with CVSS Scores & Reboot Status (`host-cve-exposure-report.erb`)
+### 1. Host - CVE Exposure Report with CVSS Scores & Reboot Status (`host-cve-exposure-report-with-cvss-scores-and-reboot-status.erb`)
 
 Consolidated compliance view for regulatory audits — shows all outstanding security vulnerabilities with severity, CVSS scores, and CVE details per host.
 
@@ -14,7 +14,7 @@ Consolidated compliance view for regulatory audits — shows all outstanding sec
 
 ---
 
-### 2. Host - Patch SLA Breach Report with Days Unpatched (`host-patch-sla-breach-report.erb`)
+### 2. Host - Patch SLA Breach Report with Days Unpatched (`host-patch-sla-breach-report-with-days-unpatched.erb`)
 
 Calculates "Days Unpatched" per host/errata and flags SLA breaches based on severity thresholds (Critical: 30 days, Important: 60 days, Moderate/Low: 90 days).
 
@@ -24,7 +24,7 @@ Calculates "Days Unpatched" per host/errata and flags SLA breaches based on seve
 
 ---
 
-### 3. Host - Severity Impact Report with IP Addresses & Reboot Status (`host-severity-impact-report.erb`)
+### 3. Host - Severity Impact Report with IP Addresses & Reboot Status (`host-severity-impact-report-with-ip-addresses-and-reboot-status.erb`)
 
 Filter hosts by a specific severity level (Critical/Important/Moderate/Low) and get their IP addresses — for network team prioritization and firewall rules.
 
@@ -34,7 +34,7 @@ Filter hosts by a specific severity level (Critical/Important/Moderate/Low) and 
 
 ---
 
-### 4. Host - CVE Lookup Report with Affected IPs & Reboot Status (`host-cve-lookup-report.erb`)
+### 4. Host - CVE Lookup Report with Affected IPs & Reboot Status (`host-cve-lookup-report-with-affected-ips-and-reboot-status.erb`)
 
 Enter a specific CVE ID (e.g., CVE-2024-1234) and get all affected hosts with their IP addresses — for incident response when a critical vulnerability is published.
 
@@ -59,7 +59,7 @@ Enter a specific CVE ID (e.g., CVE-2024-1234) and get all affected hosts with th
 SAT_URL="https://your-satellite.example.com"
 
 # Escape template content and import
-CONTENT=$(python3 -c "import sys,json; print(json.dumps(sys.stdin.read())[1:-1])" < host-cve-exposure-report.erb)
+CONTENT=$(python3 -c "import sys,json; print(json.dumps(sys.stdin.read())[1:-1])" < host-cve-exposure-report-with-cvss-scores-and-reboot-status.erb)
 
 curl -sk -u admin:password -X POST \
   -H 'Content-Type: application/json' \
