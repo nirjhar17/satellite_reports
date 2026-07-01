@@ -4,7 +4,7 @@ Custom ERB report templates for Red Hat Satellite 6.18+ to address regulatory co
 
 ## Reports
 
-### 1. Host - Compliance Report (`host-compliance-report.erb`)
+### 1. Host - CVE Exposure Report with CVSS Scores & Reboot Status (`host-compliance-report.erb`)
 
 Consolidated compliance view for regulatory audits — shows all outstanding security vulnerabilities with severity, CVSS scores, and CVE details per host.
 
@@ -14,7 +14,7 @@ Consolidated compliance view for regulatory audits — shows all outstanding sec
 
 ---
 
-### 2. Host - Patch Tracking & SLA Report v2 (`host-patch-tracking-sla-report-v2.erb`)
+### 2. Host - Patch SLA Breach Report with Days Unpatched (`host-patch-tracking-sla-report-v2.erb`)
 
 Calculates "Days Unpatched" per host/errata and flags SLA breaches based on severity thresholds (Critical: 30 days, Important: 60 days, Moderate/Low: 90 days).
 
@@ -24,7 +24,7 @@ Calculates "Days Unpatched" per host/errata and flags SLA breaches based on seve
 
 ---
 
-### 3. Host - Severity Lookup Report (`host-severity-lookup-report.erb`)
+### 3. Host - Severity Impact Report with IP Addresses & Reboot Status (`host-severity-lookup-report.erb`)
 
 Filter hosts by a specific severity level (Critical/Important/Moderate/Low) and get their IP addresses — for network team prioritization and firewall rules.
 
@@ -34,7 +34,7 @@ Filter hosts by a specific severity level (Critical/Important/Moderate/Low) and 
 
 ---
 
-### 4. Host - CVE Impact Lookup Report (`host-cve-impact-lookup-report.erb`)
+### 4. Host - CVE Lookup Report with Affected IPs & Reboot Status (`host-cve-impact-lookup-report.erb`)
 
 Enter a specific CVE ID (e.g., CVE-2024-1234) and get all affected hosts with their IP addresses — for incident response when a critical vulnerability is published.
 
